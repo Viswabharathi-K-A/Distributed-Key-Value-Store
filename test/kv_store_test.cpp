@@ -19,6 +19,10 @@ int main() {
     assert(!kv.get("name").has_value());
     std::cout<<"DELETE: OK\n";
 
+    auto result = kv.apply(DeleteCommand{"ghost"});
+    assert(result.success);
+    std::cout << "DELETE idempotency: OK\n";
+
     std::cout << "All tests passed.\n";
     return 0;
 }
