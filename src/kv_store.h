@@ -16,10 +16,10 @@ struct DeleteCommand {
 using Command = std::variant<PutCommand, DeleteCommand>;
 
 
-struct ApplyRsult {
+struct ApplyResult {
     bool success;
     std::string message;
-}
+};
 
 
 
