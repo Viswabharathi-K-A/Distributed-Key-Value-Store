@@ -48,3 +48,8 @@ target_include_directories(kv_store PUBLIC src)
 # ── Tests ─────────────────────────────────────────────────────────────────────
 add_executable(kv_store_test test/kv_store_test.cpp)
 target_link_libraries(kv_store_test PRIVATE kv_store)
+
+# ── Raft service library ─────────────────────────────────────────────────────────
+add_library(raft_service src/raft_service.cpp)
+target_include_directories(raft_service PUBLIC src ${CMAKE_CURRENT_BINARY_DIR}/proto/generated)
+target_link_libraries(raft_service PUBLIC raft_proto kv_store)
