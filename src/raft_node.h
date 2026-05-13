@@ -29,4 +29,6 @@ struct RaftNode {
         , electionTimeout (std::chrono::milliseconds(150 + rand() % 150))
         , lastHeartbeat (std::chrono::steady_clock::now())
     {}
+
+    void startElection();
 };

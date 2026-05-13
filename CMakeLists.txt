@@ -53,3 +53,8 @@ target_link_libraries(kv_store_test PRIVATE kv_store)
 add_library(raft_service src/raft_service.cpp)
 target_include_directories(raft_service PUBLIC src ${CMAKE_CURRENT_BINARY_DIR}/proto/generated)
 target_link_libraries(raft_service PUBLIC raft_proto kv_store)
+
+# ── Raft Node library ─────────────────────────────────────────────────────────
+add_library(raft_node src/raft_node.cpp)
+target_include_directories( raft_node PUBLIC src)
+target_link_libraries( raft_node PUBLIC raft_proto)
