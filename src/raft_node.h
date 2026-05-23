@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <chrono>
 
 enum class Role {
@@ -12,6 +13,7 @@ enum class Role {
 struct RaftNode {
     int              id;
     std::vector<int> peers;
+    std::unordered_map<int, std::string> peerAddresses;
     Role             role;
     int              currentTerm;
     int              votedFor;
@@ -19,9 +21,10 @@ struct RaftNode {
     std::chrono::milliseconds electionTimeout;
     std::chrono::steady_clock::time_point lastHeartbeat;
 
-    RaftNode (int id, std::vector<int> peers)
+    RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std::string> peerAddresses)
         : id(id)
         , peers (peers)
+        , peerAddresses (peerAddresses)
         , role (Role::Follower)
         , currentTerm (0)
         , votedFor (-1)
