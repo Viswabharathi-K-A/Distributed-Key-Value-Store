@@ -18,6 +18,14 @@ grpc::Status RaftServiceImpl::RequestVote(grpc::ServerContext* context, const ra
 }
 
 grpc::Status RaftServiceImpl::AppendEntries(grpc::ServerContext* context, const raft::AppendEntriesRequest* request, raft::AppendEntriesResponse* response) {
-    // TODO: implement in Phase 3
+    response->set_term(node_.currentTerm);
+    if (request->term() < node_.currentTerm) {
+        response->set_success(false);
+    } else {
+        node_.currentTerm =request->term();
+        node_.role = Role::Follower;
+        node_.lastHeartbeat = std::chrono::steady_clock::now();
+        response->set_success(true);   
+    }
     return grpc::Status::OK;
 }
