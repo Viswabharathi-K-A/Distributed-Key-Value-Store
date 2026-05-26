@@ -2,6 +2,7 @@
 #include "raft.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
 #include <iostream>
+#include <thread>
 
 
 void RaftNode::startElection() {
@@ -42,4 +43,20 @@ void RaftNode::startElection() {
 
     std::cout << " Node " <<id << " starting election for term " << currentTerm << "\n";
 
+}
+
+void RaftNode::runElectionTimer() {
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - lastHeartbeat
+        );
+
+        if (role != Role::Leader && elapsed > electionTimeout) {
+            startElection();
+            lastHeartbeat = std::chrono::steady_clock::now(); //reset timer
+        }
+    }
 }
