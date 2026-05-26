@@ -60,3 +60,37 @@ void RaftNode::runElectionTimer() {
         }
     }
 }
+
+void RaftNode::sendHeartbeats(){
+    for (int peerId : peers) {
+        auto channel = grpc::CreateChannel(
+            peerAddresses[peerId],
+            grpc::InsecureChannelCredentials()
+        );
+        auto stub = raft::RaftService::NewStub(channel);
+
+        raft::AppendEntriesRequest request;
+        request.set_term(currentTerm);
+        request.set_leaderid(id);
+
+        raft::AppendEntriesResponse response;
+        grpc::ClientContext context;
+        grpc::Status status = stub->AppendEntries(&context, request, &response);
+
+        if (status.ok() && response.term() > currentTerm) {
+            currentTerm = response.term();
+            role = Role::Follower;
+        } 
+
+    }
+}
+
+
+void RaftNode::runHeartbeatTimer() {
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        if (role == Role::Leader) {
+            sendHeartbeats();
+        }
+    }
+}

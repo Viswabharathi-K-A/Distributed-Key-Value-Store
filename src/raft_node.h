@@ -36,4 +36,8 @@ struct RaftNode {
     void startElection();
 
     void runElectionTimer();
+
+    void sendHeartbeats();
+
+    void runHeartbeatTimer();
 };
