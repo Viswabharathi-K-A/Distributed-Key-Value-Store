@@ -94,3 +94,57 @@ void RaftNode::runHeartbeatTimer() {
         }
     }
 }
+
+bool RaftNode::replicateCommand(const Command& cmd) {
+    if (role != Role::Leader) {
+        std::cout << "Node " << id << " is not leader. Cannot replicate command.\n";
+        return false;
+    }
+    int majority = (peers.size() + 1)/2 + 1;
+    
+    log.push_back({currentTerm, cmd});
+
+    for ( int peerId : peers) {
+        auto channel = grpc::CreateChannel(
+            peerAddresses[peerId],
+            grpc::InsecureChannelCredentials()
+        );
+        auto stub = raft::RaftService::NewStub(channel);
+
+        raft::AppendEntriesRequest request;
+        request.set_term(currentTerm);
+        request.set_leaderid(id);
+        request.set_prevlogindex(log.size() - 2); // index of log entry before new entry
+        request.set_prevlogterm(log.size() >=2 ? log[log.size() - 2].term : 0); // term of log entry before new entry
+        request.add_entries("placeholder");
+        request.set_leadercommit(commitIndex);
+
+        raft::AppendEntriesResponse response;
+        grpc::ClientContext context;
+
+        grpc::Status status = stub->AppendEntries(&context, request, &response);
+
+        if (status.ok() && response.success()) {
+            matchIndex[peerId] = log.size() - 1;
+            nextIndex[peerId] = log.size();
+        } else if (status.ok() && response.term() > currentTerm) {
+            currentTerm = response.term();
+            role = Role::Follower;
+        } else {
+            nextIndex[peerId]--;
+        }
+    }
+
+    int replicated = 1; // count self
+    for (auto& pair : matchIndex) {
+        if (pair.second >= (int)log.size() - 1) replicated++;
+    }
+    if (replicated >= majority) {
+        commitIndex = log.size() - 1;
+        std::cout << "Command committed at index " << commitIndex << "\n";
+        return true;
+    } else {
+        return false;
+    }
+
+}

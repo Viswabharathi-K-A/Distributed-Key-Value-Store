@@ -51,4 +51,6 @@ struct RaftNode {
     void sendHeartbeats();
 
     void runHeartbeatTimer();
+
+    bool replicateCommand(const Command& cmd);
 };
