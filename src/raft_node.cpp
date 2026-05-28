@@ -132,6 +132,7 @@ bool RaftNode::replicateCommand(const Command& cmd) {
             role = Role::Follower;
         } else {
             nextIndex[peerId]--;
+            // TODO: retry with backed-up nextIndex in Phase 5
         }
     }
 
