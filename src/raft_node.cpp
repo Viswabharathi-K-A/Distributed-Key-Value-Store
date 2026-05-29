@@ -149,3 +149,12 @@ bool RaftNode::replicateCommand(const Command& cmd) {
     }
 
 }
+
+void RaftNode::applyCommittedEntries(KVStore& kv) {
+    while (lastApplied < commitIndex) {
+        lastApplied++;
+        LogEntry& entry = log[lastApplied];
+        ApplyResult result = kv.apply(entry.command);
+        std::cout << "Applied log entry " << lastApplied << ": " << result.message << "\n";
+    }
+}

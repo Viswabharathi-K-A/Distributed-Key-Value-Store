@@ -1,5 +1,6 @@
 #pragma once
 #include "log_entry.h"
+#include "kv_store.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -53,4 +54,6 @@ struct RaftNode {
     void runHeartbeatTimer();
 
     bool replicateCommand(const Command& cmd);
+
+    void applyCommittedEntries(KVStore& kv);
 };
