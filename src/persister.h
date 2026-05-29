@@ -3,13 +3,13 @@
 #include <string>
 #include <vector>
 
-class Persistor {
+class Persister {
     public:
-        Persistor(const std::string& filename);
+        Persister(const std::string& filename);
 
         void save(int currentTerm, int votedFor, const std::vector<LogEntry>& log);
         void load(int& currentTerm, int& votedFor, std::vector<LogEntry>& log);
 
     private:
         std::string filename_;
-}
+};

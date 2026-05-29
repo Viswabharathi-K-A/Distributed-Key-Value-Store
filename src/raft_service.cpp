@@ -14,6 +14,7 @@ grpc::Status RaftServiceImpl::RequestVote(grpc::ServerContext* context, const ra
     }     else {
         response->set_votegranted(false);
     } 
+    node_.persister_.save(node_.currentTerm, node_.votedFor, node_.log);
     return grpc::Status::OK;
 }
 
@@ -48,5 +49,6 @@ grpc::Status RaftServiceImpl::AppendEntries(grpc::ServerContext* context, const 
     node_.log.resize(request->prevlogindex() + 1);
     node_.log.push_back({request->term(), Command{PutCommand{"placeholder", "placeholder"}}});
     response->set_success(true);
+    node_.persister_.save(node_.currentTerm, node_.votedFor, node_.log);
     return grpc::Status::OK;
 }

@@ -1,8 +1,8 @@
 #include <fstream>
-#include "persistor.h"
+#include "persister.h"
 
 
-void Persistor::save(int currentTerm, int votedFor, const std::vector<LogEntry>& log) {
+void Persister::save(int currentTerm, int votedFor, const std::vector<LogEntry>& log) {
     std::ofstream out(filename_, std::ios::binary);
     out.write(reinterpret_cast<const char*>(&currentTerm), sizeof(currentTerm));
     out.write(reinterpret_cast<const char*>(&votedFor), sizeof(votedFor));

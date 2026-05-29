@@ -1,6 +1,7 @@
 #pragma once
 #include "log_entry.h"
 #include "kv_store.h"
+#include "persister.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -28,13 +29,15 @@ struct RaftNode {
     std::unordered_map<int, int> nextIndex;
     std::unordered_map<int, int> matchIndex;
     KVStore& kv;
+    Persister persister_;
 
 
-    RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std::string> peerAddresses, KVStore& kv)
+    RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std::string> peerAddresses, KVStore& kv, const std::string& persistPath)
         : id(id)
         , peers (peers)
         , peerAddresses (peerAddresses)
         , kv(kv)
+        , persister_(persistPath)
         , role (Role::Follower)
         , currentTerm (0)
         , votedFor (-1)

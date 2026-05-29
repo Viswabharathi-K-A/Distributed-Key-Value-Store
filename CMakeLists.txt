@@ -58,3 +58,8 @@ target_link_libraries(raft_service PUBLIC raft_proto kv_store)
 add_library(raft_node src/raft_node.cpp)
 target_include_directories( raft_node PUBLIC src)
 target_link_libraries( raft_node PUBLIC raft_proto)
+
+# ── Persister library ─────────────────────────────────────────────────────────────
+add_library(persister src/persister.cpp)
+target_include_directories(persister PUBLIC src)
+target_link_libraries(persister PUBLIC kv_store)
