@@ -5,6 +5,29 @@
 #include <thread>
 
 
+
+RaftNode::RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std::string> peerAddresses, KVStore& kv, const std::string& persistPath)
+    : id(id)
+    , peers (peers)
+    , peerAddresses (peerAddresses)
+    , kv(kv)
+    , persister_(persistPath)
+    , role (Role::Follower)
+    , currentTerm (0)
+    , votedFor (-1)
+    , votesReceived (0)
+    , electionTimeout (std::chrono::milliseconds(150 + rand() % 150))
+    , lastHeartbeat (std::chrono::steady_clock::now())
+    , commitIndex (0)
+    , lastApplied (0)
+    , nextIndex({})
+    , matchIndex({})
+{
+    // Load persisted state
+    persister_.load(currentTerm, votedFor, log);
+}
+
+
 void RaftNode::startElection() {
     role = Role::Candidate;     // become candidate
     currentTerm ++;             // increment term
