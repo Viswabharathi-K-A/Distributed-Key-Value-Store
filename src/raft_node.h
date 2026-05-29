@@ -27,12 +27,14 @@ struct RaftNode {
     int lastApplied;                                        // highest log entry applied to state machine                                       
     std::unordered_map<int, int> nextIndex;
     std::unordered_map<int, int> matchIndex;
+    KVStore& kv;
 
 
-    RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std::string> peerAddresses)
+    RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std::string> peerAddresses, KVStore& kv)
         : id(id)
         , peers (peers)
         , peerAddresses (peerAddresses)
+        , kv(kv)
         , role (Role::Follower)
         , currentTerm (0)
         , votedFor (-1)

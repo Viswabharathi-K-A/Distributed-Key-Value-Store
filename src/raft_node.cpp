@@ -92,6 +92,7 @@ void RaftNode::runHeartbeatTimer() {
         if (role == Role::Leader) {
             sendHeartbeats();
         }
+        applyCommittedEntries(kv);
     }
 }
 
