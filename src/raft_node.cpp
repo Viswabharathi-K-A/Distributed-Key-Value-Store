@@ -129,34 +129,51 @@ bool RaftNode::replicateCommand(const Command& cmd) {
     log.push_back({currentTerm, cmd});
 
     for ( int peerId : peers) {
-        auto channel = grpc::CreateChannel(
-            peerAddresses[peerId],
-            grpc::InsecureChannelCredentials()
-        );
-        auto stub = raft::RaftService::NewStub(channel);
 
-        raft::AppendEntriesRequest request;
-        request.set_term(currentTerm);
-        request.set_leaderid(id);
-        request.set_prevlogindex(log.size() - 2); // index of log entry before new entry
-        request.set_prevlogterm(log.size() >=2 ? log[log.size() - 2].term : 0); // term of log entry before new entry
-        request.add_entries("placeholder");
-        request.set_leadercommit(commitIndex);
+        int peerNextIndex = log.empty() ? 0 : (int)log.size() - 1;
 
-        raft::AppendEntriesResponse response;
-        grpc::ClientContext context;
+        while (peerNextIndex > 0) {
 
-        grpc::Status status = stub->AppendEntries(&context, request, &response);
+            auto channel = grpc::CreateChannel(
+                peerAddresses[peerId],
+                grpc::InsecureChannelCredentials()
+            );
+            auto stub = raft::RaftService::NewStub(channel);
 
-        if (status.ok() && response.success()) {
-            matchIndex[peerId] = log.size() - 1;
-            nextIndex[peerId] = log.size();
-        } else if (status.ok() && response.term() > currentTerm) {
-            currentTerm = response.term();
-            role = Role::Follower;
-        } else {
-            nextIndex[peerId]--;
-            // TODO: retry with backed-up nextIndex in Phase 5
+            raft::AppendEntriesRequest request;
+            request.set_term(currentTerm);
+            request.set_leaderid(id);
+            request.set_prevlogindex(peerNextIndex-1); // index of log entry before new entry
+            request.set_prevlogterm(log[peerNextIndex-1].term); // term of log entry before new entry
+
+            std::string entry;
+            std::visit([&entry](const auto& cmd) {
+                using T = std::decay_t<decltype(cmd)>;
+                if constexpr (std::is_same_v<T, PutCommand>) {
+                    entry = "PUT " + cmd.key + " " + cmd.value;
+                } else if constexpr (std::is_same_v<T, DeleteCommand>) {
+                    entry = "DEL " + cmd.key;
+                }
+            }, log[peerNextIndex].command);
+            request.add_entries(entry);
+            request.set_leadercommit(commitIndex);
+
+            raft::AppendEntriesResponse response;
+            grpc::ClientContext context;
+
+            grpc::Status status = stub->AppendEntries(&context, request, &response);
+
+            if (status.ok() && response.success()) {
+                matchIndex[peerId] = peerNextIndex;
+                nextIndex[peerId] = peerNextIndex + 1;
+                break;
+            } else if (status.ok() && response.term() > currentTerm) {
+                currentTerm = response.term();
+                role = Role::Follower;
+                return false;
+            } else {
+                nextIndex[peerId] = --peerNextIndex;             
+            }    
         }
     }
 
