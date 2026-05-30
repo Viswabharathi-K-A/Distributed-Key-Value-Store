@@ -44,8 +44,8 @@ void RaftNode::startElection() {
         raft::RequestVoteRequest request;
         request.set_term(currentTerm);
         request.set_candidateid(id);
-        request.set_lastlogindex(0); // TODO: set to actual last log index 
-        request.set_lastlogterm(0);  // TODO: set to actual last log term
+        request.set_lastlogindex(log.empty() ? 0 : (int)log.size() - 1);
+        request.set_lastlogterm(log.empty() ? 0 : log.back().term);
 
         raft::RequestVoteResponse response;
         grpc::ClientContext context;

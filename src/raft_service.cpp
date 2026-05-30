@@ -3,15 +3,22 @@
 RaftServiceImpl::RaftServiceImpl(RaftNode& node) : node_(node) {}
 
 grpc::Status RaftServiceImpl::RequestVote(grpc::ServerContext* context, const raft::RequestVoteRequest* request, raft::RequestVoteResponse* response) {
+    int myLastLogTerm = node_.log.empty() ? 0 : node_.log.back().term;
+    int myLastLogIndex = node_.log.empty() ? 0 : (int)node_.log.size() - 1;
     response->set_term(node_.currentTerm);
     if (node_.votedFor == -1 || node_.votedFor == request->candidateid()) {
         if (request->term() >= node_.currentTerm) {
-            response->set_votegranted(true);
-            node_.votedFor = request->candidateid();
+            if (myLastLogTerm < request->lastlogterm() || 
+            (myLastLogTerm == request->lastlogterm() && myLastLogIndex <= request->lastlogindex())) {
+                response->set_votegranted(true);
+                node_.votedFor = request->candidateid();
+            } else {
+            response->set_votegranted(false);
+            } 
         } else {
             response->set_votegranted(false);
-        }
-    }     else {
+        }    
+    }  else {
         response->set_votegranted(false);
     } 
     node_.persister_.save(node_.currentTerm, node_.votedFor, node_.log);
