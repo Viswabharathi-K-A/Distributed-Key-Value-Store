@@ -1,4 +1,5 @@
 #include "raft_service.h"
+#include <sstream>
 
 RaftServiceImpl::RaftServiceImpl(RaftNode& node) : node_(node) {}
 
@@ -54,7 +55,26 @@ grpc::Status RaftServiceImpl::AppendEntries(grpc::ServerContext* context, const 
 
     // append entries
     node_.log.resize(request->prevlogindex() + 1);
-    node_.log.push_back({request->term(), Command{PutCommand{"placeholder", "placeholder"}}});
+    std::string entry = request->entries(0);
+    Command cmd = PutCommand{"", ""};
+    std::istringstream ss(entry);
+    std::string type;
+    ss >> type;
+    if (type != "PUT" && type != "DEL") {
+    response->set_success(false);
+    return grpc::Status::OK;
+    }   
+    if (type == "PUT") {
+        std::string key, value;
+        ss >> key >> value;
+        cmd = PutCommand{key, value};
+    } else if (type == "DEL") {
+        std::string key;
+        ss >> key;
+        cmd = DeleteCommand{key};       
+    }
+
+    node_.log.push_back({request->term(), cmd});
     response->set_success(true);
     node_.persister_.save(node_.currentTerm, node_.votedFor, node_.log);
     return grpc::Status::OK;
