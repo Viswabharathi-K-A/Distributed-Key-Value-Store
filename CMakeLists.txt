@@ -63,3 +63,7 @@ target_link_libraries( raft_node PUBLIC raft_proto)
 add_library(persister src/persister.cpp)
 target_include_directories(persister PUBLIC src)
 target_link_libraries(persister PUBLIC kv_store)
+
+# ── Main executable ─────────────────────────────────────────────────────────────
+add_executable(raft_node_bin src/main.cpp)
+target_link_libraries(raft_node_bin PRIVATE raft_node raft_service kv_store raft_proto persister)
