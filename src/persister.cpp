@@ -2,6 +2,8 @@
 #include "persister.h"
 
 
+Persister::Persister(const std::string& filename) : filename_(filename) {}
+
 void Persister::save(int currentTerm, int votedFor, const std::vector<LogEntry>& log) {
     std::ofstream out(filename_, std::ios::binary);
     out.write(reinterpret_cast<const char*>(&currentTerm), sizeof(currentTerm));

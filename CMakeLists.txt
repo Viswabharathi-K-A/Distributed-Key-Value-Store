@@ -39,7 +39,7 @@ add_custom_command(
 # ── Proto library ─────────────────────────────────────────────────────────────
 add_library(raft_proto ${PROTO_SRCS})
 target_include_directories(raft_proto PUBLIC ${GEN_DIR} ${Protobuf_INCLUDE_DIRS})
-target_link_directories(raft_proto PUBLIC ${Protobuf_LIBRARIES} ${GRPC_LIBRARIES})
+target_link_libraries(raft_proto PUBLIC ${Protobuf_LIBRARIES} ${GRPC_LIBRARIES})
 
 # ── KV store library ──────────────────────────────────────────────────────────
 add_library(kv_store src/kv_store.cpp)
@@ -54,16 +54,16 @@ add_library(raft_service src/raft_service.cpp)
 target_include_directories(raft_service PUBLIC src ${CMAKE_CURRENT_BINARY_DIR}/proto/generated)
 target_link_libraries(raft_service PUBLIC raft_proto kv_store)
 
-# ── Raft Node library ─────────────────────────────────────────────────────────
-add_library(raft_node src/raft_node.cpp)
-target_include_directories( raft_node PUBLIC src)
-target_link_libraries( raft_node PUBLIC raft_proto)
-
 # ── Persister library ─────────────────────────────────────────────────────────────
 add_library(persister src/persister.cpp)
 target_include_directories(persister PUBLIC src)
 target_link_libraries(persister PUBLIC kv_store)
 
+# ── Raft Node library ─────────────────────────────────────────────────────────
+add_library(raft_node src/raft_node.cpp)
+target_include_directories( raft_node PUBLIC src)
+target_link_libraries( raft_node PUBLIC raft_proto persister kv_store raft_service ${GRPC_LIBRARIES} ${Protobuf_LIBRARIES} grpc++ grpc pthread)
+
 # ── Main executable ─────────────────────────────────────────────────────────────
 add_executable(raft_node_bin src/main.cpp)
-target_link_libraries(raft_node_bin PRIVATE raft_node raft_service kv_store raft_proto persister)
+target_link_libraries(raft_node_bin PRIVATE raft_node raft_service)
