@@ -6,6 +6,9 @@ build/
 *.a
 *.so
 
+# Raft persist files
+node_*.log
+
 # CMake generated
 CMakeCache.txt
 CMakeFiles/

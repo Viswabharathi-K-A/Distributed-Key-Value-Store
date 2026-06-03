@@ -31,7 +31,7 @@ RaftNode::RaftNode (int id, std::vector<int> peers, std::unordered_map<int, std:
 void RaftNode::startElection() {
     role = Role::Candidate;     // become candidate
     currentTerm ++;             // increment term
-    votedFor = this->id;    
+    votedFor = id;    
     votesReceived = 1;          // vote for self
     int majority = (peers.size() + 1)/2 + 1;
     for (int peerId : peers) {
@@ -49,6 +49,7 @@ void RaftNode::startElection() {
 
         raft::RequestVoteResponse response;
         grpc::ClientContext context;
+        context.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(100));
 
         grpc::Status status = stub->RequestVote(&context, request, &response);
 
@@ -56,7 +57,7 @@ void RaftNode::startElection() {
             votesReceived++;
             if (votesReceived >= majority) {
                 role = Role::Leader;
-                std::cout << " Node " <<id << " becomes leader for term " << currentTerm << "\n"; 
+                std::cout << " Node " << id << " becomes leader for term " << currentTerm << std::endl; 
                 break;
             }
 
@@ -64,7 +65,7 @@ void RaftNode::startElection() {
 
     }
 
-    std::cout << " Node " <<id << " starting election for term " << currentTerm << "\n";
+    std::cout << " Node " << id << " starting election for term " << currentTerm << std::endl;
 
 }
 
@@ -98,6 +99,7 @@ void RaftNode::sendHeartbeats(){
 
         raft::AppendEntriesResponse response;
         grpc::ClientContext context;
+        context.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(100));
         grpc::Status status = stub->AppendEntries(&context, request, &response);
 
         if (status.ok() && response.term() > currentTerm) {

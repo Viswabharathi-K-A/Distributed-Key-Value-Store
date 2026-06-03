@@ -13,6 +13,7 @@
 #include "raft.grpc.pb.h"
 
 int main(int argc, char* argv[]) {
+    std::cout.setf(std::ios::unitbuf);
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " <node_id> <port>\n";
         return 1;
@@ -27,9 +28,7 @@ int main(int argc, char* argv[]) {
     std::unordered_map<int, std::string> allNodes = {
         {0, "localhost:50050"},
         {1, "localhost:50051"},
-        {2, "localhost:50052"},
-        {3, "localhost:50053"},
-        {4, "localhost:50054"}
+        {2, "localhost:50052"}
     };
 
     for (auto& [id, addr] : allNodes) {

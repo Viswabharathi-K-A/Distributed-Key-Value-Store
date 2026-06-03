@@ -4,9 +4,18 @@
 RaftServiceImpl::RaftServiceImpl(RaftNode& node) : node_(node) {}
 
 grpc::Status RaftServiceImpl::RequestVote(grpc::ServerContext* context, const raft::RequestVoteRequest* request, raft::RequestVoteResponse* response) {
+    
+    // update term if candidate has higher term
+    if (request->term() > node_.currentTerm) {
+        node_.currentTerm = request->term();
+        node_.votedFor = -1;
+        node_.role = Role::Follower;
+    }
+
     int myLastLogTerm = node_.log.empty() ? 0 : node_.log.back().term;
     int myLastLogIndex = node_.log.empty() ? 0 : (int)node_.log.size() - 1;
     response->set_term(node_.currentTerm);
+
     if (node_.votedFor == -1 || node_.votedFor == request->candidateid()) {
         if (request->term() >= node_.currentTerm) {
             if (myLastLogTerm < request->lastlogterm() || 
@@ -14,12 +23,12 @@ grpc::Status RaftServiceImpl::RequestVote(grpc::ServerContext* context, const ra
                 response->set_votegranted(true);
                 node_.votedFor = request->candidateid();
             } else {
-            response->set_votegranted(false);
+                response->set_votegranted(false);
             } 
         } else {
             response->set_votegranted(false);
         }    
-    }  else {
+    } else {
         response->set_votegranted(false);
     } 
     node_.persister_.save(node_.currentTerm, node_.votedFor, node_.log);
